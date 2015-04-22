@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   tf
+  std_srvs
 )
 
 ## System dependencies
@@ -21,7 +22,7 @@ find_package(PCL REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES laser_line_reconstruction
-  CATKIN_DEPENDS camera_calibration_parsers cv_bridge geometry_msgs image_geometry image_transport pcl_ros roscpp rospy sensor_msgs tf
+  CATKIN_DEPENDS camera_calibration_parsers std_srvs cv_bridge geometry_msgs image_geometry image_transport pcl_ros roscpp rospy sensor_msgs tf
   DEPENDS OpenCV PCL
 )
 
@@ -32,15 +33,19 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_executable(laser_line_reconstruction_node src/node.cpp)
+add_executable(reconstruction src/node.cpp
+                              src/triangulator.cpp
+                              src/detector.cpp
+                              src/calibrator.cpp
+                              src/reconstructor.cpp)
 
-target_link_libraries(laser_line_reconstruction_node
+target_link_libraries(reconstruction
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
-install(TARGETS laser_line_reconstruction laser_line_reconstruction_node
+install(TARGETS reconstruction
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

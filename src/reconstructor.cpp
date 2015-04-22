@@ -25,6 +25,10 @@ Reconstructor::Reconstructor(ros::NodeHandle nh,
 
   detector_  = new Detector(nh_, nhp_);
   triangulator_ = new Triangulator(nh_, nhp_);
+  calibrator_ = new Calibrator(nh_, nhp_);
+  calibration_service_ = nhp_.advertiseService("calibrate", &Reconstructor::calibrate, this);
+
+  calibration_ = true;
 }
 
 /**
@@ -46,24 +50,37 @@ void Reconstructor::imageCallback(
     return;
   }
 
-  cv_bridge::CvImagePtr cv_image_ptr;
+  cv_bridge::CvImageConstPtr cv_image_ptr;
 
   try {
     cv_image_ptr = cv_bridge::toCvShare(image_msg,
-                                       sensor_msgs::image_encodings::BGR8);
+                                        sensor_msgs::image_encodings::BGR8);
   } catch (cv_bridge::Exception& e) {
     ROS_ERROR("cv_bridge exception: %s", e.what());
     return;
   }
 
+  // If calibration is requested, detect and call calibration
+  if (calibration_) {
+    // Detect points in image
+    std::vector<cv::Point2f> points2;
+    points2 = detector_->detect(cv_image_ptr->image);
+    // Set the camera info
+    calibrator_->setCameraInfo(info_msg);
+    if (calibrator_->detectChessboard(cv_image_ptr->image, points2)) {
+      ROS_INFO("Frame added!");
+    }
+  }
+
   if (point_cloud_pub_.getNumSubscribers() > 0) {
     // Detect points in image
-    std::vector<cv::Point2d> points2;
+    std::vector<cv::Point2f> points2;
     points2 = detector_->detect(cv_image_ptr->image);
 
     // Triangulate points in space
-    std::vector<cv::Point3d> points3;
-    points3 = triangulator_->triangulate(correspondences);
+    std::vector<cv::Point3f> points3;
+    triangulator_->setCameraInfo(info_msg);
+    points3 = triangulator_->triangulate(points2);
 
     if (points3.empty()) {
       ROS_WARN("Empty pointcloud");
@@ -80,7 +97,7 @@ void Reconstructor::imageCallback(
  * @param stamp ROS time to publish the points
  */
 void Reconstructor::publishPoints(
-    const std::vector<cv::Point3d>& points,
+    const std::vector<cv::Point3f>& points,
     const ros::Time& stamp) {
   PointCloud::Ptr point_cloud(new PointCloud());
   point_cloud->header.frame_id = camera_frame_id_;
@@ -96,5 +113,11 @@ void Reconstructor::publishPoints(
   }
 
   point_cloud_pub_.publish(point_cloud);
+}
+
+bool Reconstructor::calibrate(std_srvs::Empty::Request&,
+                              std_srvs::Empty::Response&) {
+  calibration_ = true;
+  return true;
 }
 
