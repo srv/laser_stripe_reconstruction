@@ -128,14 +128,14 @@ void Calibrator::fitPlane() {
   cv::Mat normal = svd_v.col(svd_v.cols-1);
 
   // Calculate D
-  double D = -1*(normal.at<double>(0, 0)*centroid.at<double>(0, 0)
-               + normal.at<double>(1, 0)*centroid.at<double>(0, 1)
-               + normal.at<double>(2, 0)*centroid.at<double>(0, 2));
-  cv::Mat laser_plane(1, 4, CV_64F);
-  laser_plane.at<double>(0) = normal.at<double>(0, 0);
-  laser_plane.at<double>(1) = normal.at<double>(1, 0);
-  laser_plane.at<double>(2) = normal.at<double>(2, 0);
-  laser_plane.at<double>(3) = D;
+  float D = -1*(normal.at<float>(0, 0)*centroid.at<float>(0, 0)
+            + normal.at<float>(1, 0)*centroid.at<float>(0, 1)
+            + normal.at<float>(2, 0)*centroid.at<float>(0, 2));
+  cv::Mat laser_plane(1, 4, CV_32FC1);
+  laser_plane.at<float>(0) = normal.at<float>(0, 0);
+  laser_plane.at<float>(1) = normal.at<float>(1, 0);
+  laser_plane.at<float>(2) = normal.at<float>(2, 0);
+  laser_plane.at<float>(3) = D;
 
   // Save the calibration to a file for later use
   // Default to ~/.ros/calibration.yaml

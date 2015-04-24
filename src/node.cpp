@@ -10,7 +10,6 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh;
   ros::NodeHandle nhp("~");
   Reconstructor reconstructor(nh, nhp);
-  ros::MultiThreadedSpinner spinner(2);
-  spinner.spin();
+  ros::spin();
   return 0;
 }

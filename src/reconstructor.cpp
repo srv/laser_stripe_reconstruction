@@ -28,7 +28,7 @@ Reconstructor::Reconstructor(ros::NodeHandle nh,
   calibrator_ = new Calibrator(nh_, nhp_);
   calibration_service_ = nhp_.advertiseService("calibrate", &Reconstructor::calibrate, this);
 
-  calibration_ = true;
+  calibration_ = false;
 }
 
 /**
@@ -72,7 +72,7 @@ void Reconstructor::imageCallback(
     }
   }
 
-  if (point_cloud_pub_.getNumSubscribers() > 0) {
+  if (point_cloud_pub_.getNumSubscribers() > 0 && !calibration_) {
     // Detect points in image
     std::vector<cv::Point2f> points2;
     points2 = detector_->detect(cv_image_ptr->image);

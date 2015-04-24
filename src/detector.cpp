@@ -13,42 +13,26 @@ Detector::Detector(ros::NodeHandle nh,
                  : nh_(nh), nhp_(nhp) {
 
   // detection parameters
-  nhp_.param("threshold_value", threshold_value_, 220);
-  nhp_.param("closing_element_size", closing_element_size_, 8);
-  nhp_.param("opening_element_size", opening_element_size_, 2);
-  nhp_.param("min_value_threshold", min_value_threshold_, 100);
-  nhp_.param("contours_threshold", contours_threshold_, 100);
-
-  // TODO(mmc): add peak_window_size_, max_laser_width_
-  peak_window_size_ = 5;
-  max_laser_width_ = 40;
-
-  // ROI parameters
-  nhp_.param("ROI_x", roi_x_, 375);
-  nhp_.param("ROI_y", roi_y_, 200);
-  nhp_.param("ROI_width", roi_width_, 500);
-  nhp_.param("ROI_height", roi_height_, 350);
+  nhp_.param("peak_window_size", peak_window_size_, 5);
+  nhp_.param("max_laser_width", max_laser_width_, 40);
 
   // Show debug images in another window
   nhp_.param("show_debug_images", show_debug_images_, false);
 
   ROS_INFO_STREAM("[Detector]: Parameters \n" <<
-  "\t\t* threshold_value:       " << threshold_value_ << "\n" <<
-  "\t\t* closing_element_size:  " << closing_element_size_ << "\n" <<
-  "\t\t* opening_element_size:  " << opening_element_size_ << "\n" <<
-  "\t\t* min_value_threshold:   " << min_value_threshold_ << "\n" <<
-  "\t\t* contours_threshold:    " << contours_threshold_ << "\n" <<
-  "\t\t* ROI_x:                 " << roi_x_ << "\n" <<
-  "\t\t* ROI_y:                 " << roi_y_ << "\n" <<
-  "\t\t* ROI_width:             " << roi_width_ << "\n" <<
-  "\t\t* ROI_height:            " << roi_height_);
+  "\t\t* peak_window_size:      " << peak_window_size_ << "\n" <<
+  "\t\t* max_laser_width:       " << max_laser_width_ << "\n" <<
+  "\t\t* show_debug_images:     " << show_debug_images_);
 }
 
 vector<Point2f> Detector::detect(const Mat& img) {
   // BGR images expected
   assert(img.channels() == 3);
 
-  cv::Mat show_img = img.clone();
+  cv::Mat show_img;
+  if (show_debug_images_) {
+    show_img = img.clone();
+  }
 
   // Prepare output vector
   vector<Point2f> points2;
@@ -107,12 +91,15 @@ vector<Point2f> Detector::detect(const Mat& img) {
       cv::Vec3b val = img.at<cv::Vec3b>(i, peak_j);
       if (val[1] >= val[0] && val[1] >= val[2] && val[1] >= 100) {
         points2.push_back(cv::Point2f(peak_j, i));
-        cv::circle(show_img, cv::Point(peak_j, i), 5, cv::Scalar(0, 0, 255), 2);
+        if (show_debug_images_)
+          cv::circle(show_img, cv::Point(peak_j, i), 5, cv::Scalar(0, 0, 255), 2);
       }
     }
   }
-  cv::namedWindow("Laser", 0);
-  cv::imshow("Laser", show_img);
-  cv::waitKey(3);
+  if (show_debug_images_) {
+    cv::namedWindow("Laser", 0);
+    cv::imshow("Laser", show_img);
+    cv::waitKey(3);
+  }
   return points2;
 }

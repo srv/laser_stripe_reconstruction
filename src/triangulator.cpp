@@ -22,7 +22,7 @@ Triangulator::Triangulator(ros::NodeHandle nh,
 
   FileStorage fs;
   fs.open(calibration_filename, FileStorage::READ);
-  fs["line_planes"] >> laser_plane_;
+  fs["laser_plane"] >> laser_plane_;
   is_cm_init_ = false;
 
   ROS_INFO_STREAM("[Triangulator]: Parameters \n" <<
@@ -66,18 +66,27 @@ void Triangulator::lookupLaserTransform(void) {
 
 vector<Point3f> Triangulator::triangulate(const vector<Point2f>& points2d) {
   vector<Point3f>  points3d;
-  if (is_cm_init_ ) {
+  if (is_cm_init_) {
     for (size_t i = 0; i < points2d.size(); i++) {
       Point3f ray, point3d;
       ray = cm_.projectPixelTo3dRay(points2d[i]);
-      double t;
-      t = (-laser_plane_.at<double>(3)) /
-           (laser_plane_.at<double>(0) * ray.x +
-            laser_plane_.at<double>(1) * ray.y +
-            laser_plane_.at<double>(2));
+      float t;
+      t = (-laser_plane_.at<float>(3)) /
+           (laser_plane_.at<float>(0) * ray.x +
+            laser_plane_.at<float>(1) * ray.y +
+            laser_plane_.at<float>(2));
       point3d = cv::Point3f(ray.x * t, ray.y * t, t);
-      points3d.push_back(point3d);
+      if (point3d.z > 0) {
+        points3d.push_back(point3d);
+      } else if (point3d.z == 0) {
+        ROS_DEBUG("[Triangulator]: Skipping point with z = 0");
+      } else {
+        ROS_DEBUG("[Triangulator]: Skipping point with z < 0");
+      }
     }
+    if (points3d.size() < points2d.size())
+      ROS_WARN_STREAM("[Triangulator]: Some points have been skipped ("
+          << points3d.size() << "/" << points2d.size() << ")");
   } else {
     ROS_ERROR("[Triangulator]: Cannot triangulate. Set camera info first!");
   }
