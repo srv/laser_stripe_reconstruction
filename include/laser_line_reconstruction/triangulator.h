@@ -17,7 +17,7 @@ class Triangulator {
   Triangulator(ros::NodeHandle nh, ros::NodeHandle nhp);
   void setCameraInfo(const sensor_msgs::CameraInfoConstPtr& info_msg);
   void setCameraInfo(const sensor_msgs::CameraInfo& info_msg);
-  std::vector<cv::Point3f> triangulate(const std::vector<cv::Point2f>& points2d);
+  std::vector<cv::Point3d> triangulate(const std::vector<cv::Point2d>& points2d);
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nhp_;

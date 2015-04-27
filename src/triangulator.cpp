@@ -64,18 +64,18 @@ void Triangulator::lookupLaserTransform(void) {
   }
 }
 
-vector<Point3f> Triangulator::triangulate(const vector<Point2f>& points2d) {
-  vector<Point3f>  points3d;
+vector<Point3d> Triangulator::triangulate(const vector<Point2d>& points2d) {
+  vector<Point3d>  points3d;
   if (is_cm_init_) {
     for (size_t i = 0; i < points2d.size(); i++) {
-      Point3f ray, point3d;
+      Point3d ray, point3d;
       ray = cm_.projectPixelTo3dRay(points2d[i]);
-      float t;
-      t = (-laser_plane_.at<float>(3)) /
-           (laser_plane_.at<float>(0) * ray.x +
-            laser_plane_.at<float>(1) * ray.y +
-            laser_plane_.at<float>(2));
-      point3d = cv::Point3f(ray.x * t, ray.y * t, t);
+      double t;
+      t = (-laser_plane_.at<double>(3)) /
+           (laser_plane_.at<double>(0) * ray.x +
+            laser_plane_.at<double>(1) * ray.y +
+            laser_plane_.at<double>(2));
+      point3d = cv::Point3d(ray.x * t, ray.y * t, t);
       if (point3d.z > 0) {
         points3d.push_back(point3d);
       } else if (point3d.z == 0) {

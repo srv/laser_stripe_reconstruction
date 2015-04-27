@@ -27,8 +27,7 @@ Reconstructor::Reconstructor(ros::NodeHandle nh,
   triangulator_ = new Triangulator(nh_, nhp_);
   calibrator_ = new Calibrator(nh_, nhp_);
   calibration_service_ = nhp_.advertiseService("calibrate", &Reconstructor::calibrate, this);
-
-  calibration_ = false;
+  nhp_.param("calibrate", calibration_, false);
 }
 
 /**
@@ -63,7 +62,7 @@ void Reconstructor::imageCallback(
   // If calibration is requested, detect and call calibration
   if (calibration_) {
     // Detect points in image
-    std::vector<cv::Point2f> points2;
+    std::vector<cv::Point2d> points2;
     points2 = detector_->detect(cv_image_ptr->image);
     // Set the camera info
     calibrator_->setCameraInfo(info_msg);
@@ -74,11 +73,11 @@ void Reconstructor::imageCallback(
 
   if (point_cloud_pub_.getNumSubscribers() > 0 && !calibration_) {
     // Detect points in image
-    std::vector<cv::Point2f> points2;
+    std::vector<cv::Point2d> points2;
     points2 = detector_->detect(cv_image_ptr->image);
 
     // Triangulate points in space
-    std::vector<cv::Point3f> points3;
+    std::vector<cv::Point3d> points3;
     triangulator_->setCameraInfo(info_msg);
     points3 = triangulator_->triangulate(points2);
 
@@ -97,7 +96,7 @@ void Reconstructor::imageCallback(
  * @param stamp ROS time to publish the points
  */
 void Reconstructor::publishPoints(
-    const std::vector<cv::Point3f>& points,
+    const std::vector<cv::Point3d>& points,
     const ros::Time& stamp) {
   PointCloud::Ptr point_cloud(new PointCloud());
   point_cloud->header.frame_id = camera_frame_id_;

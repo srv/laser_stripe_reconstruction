@@ -17,9 +17,9 @@ class Calibrator {
   Calibrator(ros::NodeHandle nh, ros::NodeHandle nhp);
   void setCameraInfo(const sensor_msgs::CameraInfoConstPtr& cam_info);
   bool detectChessboard(const cv::Mat& img,
-                        const std::vector<cv::Point2f>& points2d);
+                        const std::vector<cv::Point2d>& points2d);
   void savePoints(const std::vector<double>& plane,
-                  const std::vector<cv::Point2f>& points2d);
+                  const std::vector<cv::Point2d>& points2d);
   void fitPlane();
 
  private:
@@ -33,7 +33,7 @@ class Calibrator {
   image_geometry::PinholeCameraModel cm_;
   std::vector<std::vector<double> > plane_pf_;
   std::vector<cv::Mat> points3d_pf_;
-  std::vector<cv::Point2f> borders_;
+  std::vector<cv::Point2d> borders_;
   int images_taken_;
   cv::Mat show_img_;
 
@@ -42,19 +42,19 @@ class Calibrator {
                             int chessboard_squares_y,
                             double chessboard_size,
                             std::vector<double>& plane);
-  std::vector<cv::Point2f> extractPoints(
-    const std::vector<cv::Point2f> points, const cv::Mat& mask) ;
+  std::vector<cv::Point2d> extractPoints(
+    const std::vector<cv::Point2d> points, const cv::Mat& mask) ;
   cv::Mat removeChessboard(const cv::Mat& img);
-  std::vector<cv::Point2f> projectPoints(
-    const std::vector<cv::Point3f>& object_points,
+  std::vector<cv::Point2d> projectPoints(
+    const std::vector<cv::Point3d>& object_points,
     const cv::Mat& rvec, const cv::Mat& tvec,
     const cv::Mat& camera_matrix , const cv::Mat& dist_coeffs);
   double computeReprojectionError(
-    const std::vector<cv::Point3f>& object_points,
+    const std::vector<cv::Point3d>& object_points,
     const std::vector<cv::Point2f>& image_points,
     const cv::Mat& rvec, const cv::Mat& tvec,
     const cv::Mat& camera_matrix , const cv::Mat& dist_coeffs);
-  cv::Point3f intersectRay(const cv::Point2f& p,
+  cv::Point3d intersectRay(const cv::Point2d& p,
                            const std::vector<double>& plane);
 };
 

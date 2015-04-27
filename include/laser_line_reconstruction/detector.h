@@ -13,7 +13,7 @@
 class Detector {
  public:
   Detector(ros::NodeHandle nh, ros::NodeHandle nhp);
-  std::vector<cv::Point2f> detect(const cv::Mat& img);
+  std::vector<cv::Point2d> detect(const cv::Mat& img);
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle nhp_;

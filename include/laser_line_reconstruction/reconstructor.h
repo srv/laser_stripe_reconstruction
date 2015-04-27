@@ -42,7 +42,7 @@ class Reconstructor {
 
   std::string camera_frame_id_;
 
-  void publishPoints(const std::vector<cv::Point3f>& points,
+  void publishPoints(const std::vector<cv::Point3d>& points,
                      const ros::Time& stamp);
   void imageCallback(
     const sensor_msgs::ImageConstPtr      &image_msg,

@@ -25,7 +25,7 @@ Detector::Detector(ros::NodeHandle nh,
   "\t\t* show_debug_images:     " << show_debug_images_);
 }
 
-vector<Point2f> Detector::detect(const Mat& img) {
+vector<Point2d> Detector::detect(const Mat& img) {
   // BGR images expected
   assert(img.channels() == 3);
 
@@ -35,7 +35,7 @@ vector<Point2f> Detector::detect(const Mat& img) {
   }
 
   // Prepare output vector
-  vector<Point2f> points2;
+  vector<Point2d> points2;
 
   // Split the image in channels
   vector<Mat> channels(3);
@@ -90,7 +90,7 @@ vector<Point2f> Detector::detect(const Mat& img) {
       cv::Point p(peak_j, i);
       cv::Vec3b val = img.at<cv::Vec3b>(i, peak_j);
       if (val[1] >= val[0] && val[1] >= val[2] && val[1] >= 100) {
-        points2.push_back(cv::Point2f(peak_j, i));
+        points2.push_back(cv::Point2d(peak_j, i));
         if (show_debug_images_)
           cv::circle(show_img, cv::Point(peak_j, i), 5, cv::Scalar(0, 0, 255), 2);
       }

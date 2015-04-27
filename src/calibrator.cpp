@@ -29,7 +29,7 @@ void Calibrator::setCameraInfo(
 }
 
 bool Calibrator::detectChessboard(const cv::Mat& img,
-                                  const std::vector<cv::Point2f>& points2d) {
+                                  const std::vector<cv::Point2d>& points2d) {
   std::vector<double> plane;
   show_img_ = img.clone();
   bool success;
@@ -41,7 +41,7 @@ bool Calibrator::detectChessboard(const cv::Mat& img,
                                   plane);
   if (success) {
     cv::Mat mask = removeChessboard(img);
-    std::vector<cv::Point2f> filt_points2d;
+    std::vector<cv::Point2d> filt_points2d;
     filt_points2d = extractPoints(points2d, mask);
     savePoints(plane, filt_points2d);
   }
@@ -51,9 +51,9 @@ bool Calibrator::detectChessboard(const cv::Mat& img,
   return success;
 }
 
-std::vector<cv::Point2f> Calibrator::extractPoints(
-    const std::vector<cv::Point2f> points, const cv::Mat& mask) {
-  std::vector<cv::Point2f> filt_points;
+std::vector<cv::Point2d> Calibrator::extractPoints(
+    const std::vector<cv::Point2d> points, const cv::Mat& mask) {
+  std::vector<cv::Point2d> filt_points;
   for (size_t k = 0; k < points.size(); k++) {
     const unsigned char val = mask.at<unsigned char>(points[k].y, points[k].x);
     if (val>0) {
@@ -81,11 +81,11 @@ cv::Mat Calibrator::removeChessboard(const cv::Mat& img) {
 }
 
 void Calibrator::savePoints(const std::vector<double>& plane,
-                            const std::vector<cv::Point2f>& points2d) {
+                            const std::vector<cv::Point2d>& points2d) {
   cv::Mat points3d;
   for (size_t i = 0; i < points2d.size(); i++) {
-    cv::Point3f p = intersectRay(points2d[i], plane);
-    cv::Mat p_mat = (cv::Mat_<float>(1, 3) << p.x, p.y, p.z);
+    cv::Point3d p = intersectRay(points2d[i], plane);
+    cv::Mat p_mat = (cv::Mat_<double>(1, 3) << p.x, p.y, p.z);
     points3d.push_back(p_mat);
     points3d_pf_.push_back(p_mat);
   }
@@ -100,19 +100,19 @@ void Calibrator::fitPlane() {
 
   // Fit a plane for each line
   // substract the centroid from the point matrix
-  cv::Mat centroid = cv::Mat::zeros(1, 3, CV_32FC1);
+  cv::Mat centroid = cv::Mat::zeros(1, 3, CV_64FC1);
   size_t num_points = points3d_pf_.size();
-  cv::Mat points(num_points, 3, CV_32FC1);
+  cv::Mat points(num_points, 3, CV_64FC1);
   for (size_t j = 0; j < num_points; j++) {
     centroid += points3d_pf_[j];
     // points3d_pf_[j].copyTo(points.row(j));
     for (size_t i = 0; i < 3; i++)
-      points.at<float>(j, i) = points3d_pf_[j].at<float>(i);
+      points.at<double>(j, i) = points3d_pf_[j].at<double>(i);
   }
-  centroid = centroid / static_cast<float>(num_points);
+  centroid = centroid / static_cast<double>(num_points);
   ROS_INFO_STREAM("Centroid is in " << centroid);
   cv::Mat points_centered;
-  points_centered = points - cv::Mat::ones(num_points, 1, CV_32FC1)*centroid;
+  points_centered = points - cv::Mat::ones(num_points, 1, CV_64FC1)*centroid;
 
   // Singular Value Decomposition
   ROS_INFO_STREAM("Running SVD...");
@@ -128,14 +128,14 @@ void Calibrator::fitPlane() {
   cv::Mat normal = svd_v.col(svd_v.cols-1);
 
   // Calculate D
-  float D = -1*(normal.at<float>(0, 0)*centroid.at<float>(0, 0)
-            + normal.at<float>(1, 0)*centroid.at<float>(0, 1)
-            + normal.at<float>(2, 0)*centroid.at<float>(0, 2));
-  cv::Mat laser_plane(1, 4, CV_32FC1);
-  laser_plane.at<float>(0) = normal.at<float>(0, 0);
-  laser_plane.at<float>(1) = normal.at<float>(1, 0);
-  laser_plane.at<float>(2) = normal.at<float>(2, 0);
-  laser_plane.at<float>(3) = D;
+  double D = -1*(normal.at<double>(0, 0)*centroid.at<double>(0, 0)
+            + normal.at<double>(1, 0)*centroid.at<double>(0, 1)
+            + normal.at<double>(2, 0)*centroid.at<double>(0, 2));
+  cv::Mat laser_plane(1, 4, CV_64FC1);
+  laser_plane.at<double>(0) = normal.at<double>(0, 0);
+  laser_plane.at<double>(1) = normal.at<double>(1, 0);
+  laser_plane.at<double>(2) = normal.at<double>(2, 0);
+  laser_plane.at<double>(3) = D;
 
   // Save the calibration to a file for later use
   // Default to ~/.ros/calibration.yaml
@@ -160,14 +160,14 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
   bool low_reprojection_error = false;
 
   // Generate the 3D points of the chessboard
-  std::vector<cv::Point3f> chessboard_points;
-  float cx = chessboard_size * chessboard_squares_x / 2;
-  float cy = chessboard_size * chessboard_squares_y / 2;
+  std::vector<cv::Point3d> chessboard_points;
+  double cx = chessboard_size * chessboard_squares_x / 2;
+  double cy = chessboard_size * chessboard_squares_y / 2;
   for (int i = 0; i < chessboard_squares_y; i++) {
     for (int j = 0; j < chessboard_squares_x; j++) {
-      float x = j*chessboard_size - cx;
-      float y = i*chessboard_size - cy;
-      cv::Point3f p(x, y, 0.0);
+      double x = j*chessboard_size - cx;
+      double y = i*chessboard_size - cy;
+      cv::Point3d p(x, y, 0.0);
       chessboard_points.push_back(p);
     }
   }
@@ -185,19 +185,23 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
   // Try to find the chessboard
   std::vector<cv::Point2f> corners;
   cv::Size pattern_size(chessboard_squares_x, chessboard_squares_y);
+  ROS_WARN("[LaserCalibration:] findChessboardCorners");
   pattern_found = cv::findChessboardCorners(gray8u, pattern_size, corners);
   int vec_size = chessboard_squares_x*chessboard_squares_y;
   if (!pattern_found)
     ROS_WARN("[LaserCalibration:] Chessboard not detected");
   if (pattern_found && static_cast<int>(corners.size()) == vec_size) {
     // Refine
+    ROS_WARN("[LaserCalibration:] cornerSubPix");
     cv::cornerSubPix(gray8u, corners, cv::Size(5, 5), cv::Size(-1, -1),
       cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
     const cv::Mat K_prime(cm_.intrinsicMatrix());
     // Now solve the 2D-3D problem as usual
     cv::Mat rvec, tvec;
+    ROS_WARN("[LaserCalibration:] solvePnP");
     success = cv::solvePnP(chessboard_points, corners,
                            K_prime, cv::Mat(), rvec, tvec);
+    ROS_WARN("[LaserCalibration:] computeReprojectionError");
     double error = computeReprojectionError(chessboard_points, corners,
                                             rvec, tvec, K_prime, cv::Mat());
     low_reprojection_error = (error < max_reproj_error_);
@@ -207,6 +211,7 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
     } else if (success && low_reprojection_error) {
       // Get 3D plane
       cv::Mat rot(3, 3, CV_64FC1);
+      ROS_WARN("[LaserCalibration:] Rodrigues");
       cv::Rodrigues(rvec, rot);
       // In a camera, Z is pointing out
       cv::Mat dir_vec = (cv::Mat_<double>(3, 1) << 0, 0, 1);
@@ -236,11 +241,11 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
 
       // save the outer borders of the pattern for latter use
       borders_.clear();
-      std::vector<cv::Point3f> borders3d;
-      borders3d.push_back(cv::Point3f(- 0.275, - 0.225, 0));
-      borders3d.push_back(cv::Point3f(- 0.275, + 0.175, 0));
-      borders3d.push_back(cv::Point3f(+ 0.275, + 0.175, 0));
-      borders3d.push_back(cv::Point3f(+ 0.275, - 0.225, 0));
+      std::vector<cv::Point3d> borders3d;
+      borders3d.push_back(cv::Point3d(- 0.275, - 0.225, 0));
+      borders3d.push_back(cv::Point3d(- 0.275, + 0.175, 0));
+      borders3d.push_back(cv::Point3d(+ 0.275, + 0.175, 0));
+      borders3d.push_back(cv::Point3d(+ 0.275, - 0.225, 0));
       borders_ = projectPoints(borders3d, rvec, tvec, K_prime, cv::Mat());
     } else {
       ROS_WARN("[LaserCalibration:] SolvePnP could not find a valid tf.");
@@ -249,33 +254,39 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
   return pattern_found && success && low_reprojection_error;
 }
 
-std::vector<cv::Point2f> Calibrator::projectPoints(
-    const std::vector<cv::Point3f>& object_points,
+std::vector<cv::Point2d> Calibrator::projectPoints(
+    const std::vector<cv::Point3d>& object_points,
     const cv::Mat& rvec, const cv::Mat& tvec,
     const cv::Mat& camera_matrix , const cv::Mat& dist_coeffs){
-  std::vector<cv::Point2f> image_points;
+  std::vector<cv::Point2d> image_points;
   cv::projectPoints(cv::Mat(object_points), rvec, tvec, camera_matrix,
                     dist_coeffs, image_points);
   return image_points;
 }
 
 double Calibrator::computeReprojectionError(
-    const std::vector<cv::Point3f>& object_points,
+    const std::vector<cv::Point3d>& object_points,
     const std::vector<cv::Point2f>& image_points,
     const cv::Mat& rvec, const cv::Mat& tvec,
     const cv::Mat& camera_matrix , const cv::Mat& dist_coeffs) {
-  std::vector<cv::Point2f> image_points2;
+  std::vector<cv::Point2d> image_points2;
   double err;
   // project
+  ROS_WARN("[LaserCalibration:] projectPoints");
   cv::projectPoints(cv::Mat(object_points), rvec, tvec, camera_matrix,
                                        dist_coeffs, image_points2);
+  ROS_WARN("[LaserCalibration:] difference");
   // difference
-  err = cv::norm(cv::Mat(image_points), cv::Mat(image_points2), CV_L2);
+  cv::Mat image_points_mat(image_points);
+  cv::Mat image_points_d;
+  image_points_mat.convertTo(image_points_d, CV_64FC1);
+  err = cv::norm(image_points_d, cv::Mat(image_points2), CV_L2);
   // calculate the arithmetical mean
+  ROS_WARN("[LaserCalibration:] return");
   return std::sqrt(err*err/object_points.size());
 }
 
-cv::Point3f Calibrator::intersectRay(const cv::Point2f& p,
+cv::Point3d Calibrator::intersectRay(const cv::Point2d& p,
                                      const std::vector<double>& plane) {
   double t;
   double A = plane[0];
@@ -284,7 +295,7 @@ cv::Point3f Calibrator::intersectRay(const cv::Point2f& p,
   double D = plane[3];
   t = A*(p.x-cm_.cx())/cm_.fx()+B*(p.y-cm_.cy())/cm_.fy()+C;
   t = -D/t;
-  cv::Point3f q;
+  cv::Point3d q;
   q.x = (p.x-cm_.cx())/cm_.fx()*t;
   q.y = (p.y-cm_.cy())/cm_.fy()*t;
   q.z = t;
