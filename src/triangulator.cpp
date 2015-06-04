@@ -26,6 +26,7 @@ Triangulator::Triangulator(ros::NodeHandle nh,
   is_cm_init_ = false;
 
   ROS_INFO_STREAM("[Triangulator]: Parameters \n" <<
+  "\t\t* Calibration filename:     " << calibration_filename << "\n" <<
   "\t\t* Laser planes:             " << laser_plane_.rows << " found\n");
 }
 

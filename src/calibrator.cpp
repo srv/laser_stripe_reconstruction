@@ -185,23 +185,19 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
   // Try to find the chessboard
   std::vector<cv::Point2f> corners;
   cv::Size pattern_size(chessboard_squares_x, chessboard_squares_y);
-  ROS_WARN("[LaserCalibration:] findChessboardCorners");
   pattern_found = cv::findChessboardCorners(gray8u, pattern_size, corners);
   int vec_size = chessboard_squares_x*chessboard_squares_y;
   if (!pattern_found)
     ROS_WARN("[LaserCalibration:] Chessboard not detected");
   if (pattern_found && static_cast<int>(corners.size()) == vec_size) {
     // Refine
-    ROS_WARN("[LaserCalibration:] cornerSubPix");
     cv::cornerSubPix(gray8u, corners, cv::Size(5, 5), cv::Size(-1, -1),
       cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
     const cv::Mat K_prime(cm_.intrinsicMatrix());
     // Now solve the 2D-3D problem as usual
     cv::Mat rvec, tvec;
-    ROS_WARN("[LaserCalibration:] solvePnP");
     success = cv::solvePnP(chessboard_points, corners,
                            K_prime, cv::Mat(), rvec, tvec);
-    ROS_WARN("[LaserCalibration:] computeReprojectionError");
     double error = computeReprojectionError(chessboard_points, corners,
                                             rvec, tvec, K_prime, cv::Mat());
     low_reprojection_error = (error < max_reproj_error_);
@@ -211,7 +207,6 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
     } else if (success && low_reprojection_error) {
       // Get 3D plane
       cv::Mat rot(3, 3, CV_64FC1);
-      ROS_WARN("[LaserCalibration:] Rodrigues");
       cv::Rodrigues(rvec, rot);
       // In a camera, Z is pointing out
       cv::Mat dir_vec = (cv::Mat_<double>(3, 1) << 0, 0, 1);
@@ -272,17 +267,14 @@ double Calibrator::computeReprojectionError(
   std::vector<cv::Point2d> image_points2;
   double err;
   // project
-  ROS_WARN("[LaserCalibration:] projectPoints");
   cv::projectPoints(cv::Mat(object_points), rvec, tvec, camera_matrix,
                                        dist_coeffs, image_points2);
-  ROS_WARN("[LaserCalibration:] difference");
   // difference
   cv::Mat image_points_mat(image_points);
   cv::Mat image_points_d;
   image_points_mat.convertTo(image_points_d, CV_64FC1);
   err = cv::norm(image_points_d, cv::Mat(image_points2), CV_L2);
   // calculate the arithmetical mean
-  ROS_WARN("[LaserCalibration:] return");
   return std::sqrt(err*err/object_points.size());
 }
 
