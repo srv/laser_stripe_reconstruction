@@ -6,6 +6,7 @@
 #ifndef RECONSTRUCTOR_H
 #define RECONSTRUCTOR_H
 
+#include <laser_line_reconstruction/uwsim_detector.h>
 #include <laser_line_reconstruction/detector.h>
 #include <laser_line_reconstruction/triangulator.h>
 #include <laser_line_reconstruction/calibrator.h>
@@ -28,10 +29,12 @@ class Reconstructor {
   Reconstructor(ros::NodeHandle nh, ros::NodeHandle nhp);
  private:
   Detector* detector_;
+  UWSimDetector* uwsim_detector_;
   Triangulator* triangulator_;
   Calibrator* calibrator_;
 
   bool calibration_;
+  bool uwsim_;
 
   ros::NodeHandle nh_;
   ros::NodeHandle nhp_;

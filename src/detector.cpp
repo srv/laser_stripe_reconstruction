@@ -43,15 +43,24 @@ vector<Point2d> Detector::detect(const Mat& img) {
   Mat g(img.size(), CV_8UC1);
   Mat green = channels[1];
 
+  double min, max;
+  cv::Point min_idx, max_idx;
+
   // Substract red channel to green channel
-  g = channels[1] - channels[2];
+  g = channels[1];  // - channels[2];
   cv::Mat g_double;
   g.convertTo(g_double, CV_32F);
+  cv::minMaxLoc(g, &min, &max, &min_idx, &max_idx);
+  g_double = g_double * 1.0/(max - min) - min * 1.0/(max - min);
 
   Mat d_double;
   Scharr(g_double, d_double, g_double.depth(),
          1,   // order of X derivative
          0);  // order of Y derivative
+  Sobel(g_double, d_double, g_double.depth(), 1, 0, 5);
+  cv::minMaxLoc(d_double, &min, &max, &min_idx, &max_idx);
+  d_double = d_double * 1.0/(max - min) - min * 1.0/(max - min);
+  show_img = d_double.clone();
 
   // Get max value per column
   for (size_t i = 0; i < d_double.rows; i++) {
@@ -60,8 +69,6 @@ vector<Point2d> Detector::detect(const Mat& img) {
     std::vector<float> row_i(Mi, Mi + d_double.cols);
 
     // Get max and min per column
-    double min, max;
-    cv::Point min_idx, max_idx;
     cv::minMaxLoc(row_i, &min, &max, &min_idx, &max_idx);
     // std::cout << "IDX = " << i
     //           << " Min is " << min
@@ -96,7 +103,9 @@ vector<Point2d> Detector::detect(const Mat& img) {
       }
     }
   }
+  ROS_INFO_STREAM("KK");
   if (show_debug_images_) {
+    ROS_INFO_STREAM("KK2");
     cv::namedWindow("Laser", 0);
     cv::imshow("Laser", show_img);
     cv::waitKey(3);

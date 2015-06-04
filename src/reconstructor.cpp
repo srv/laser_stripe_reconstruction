@@ -16,6 +16,8 @@
 Reconstructor::Reconstructor(ros::NodeHandle nh,
                              ros::NodeHandle nhp)
                            : nh_(nh), nhp_(nhp), it_(nh) {
+  nhp_.param("uwsim_detector", uwsim_, false);
+
   camera_sub_ = it_.subscribeCamera("image",
                                     1,  // queue size
                                     &Reconstructor::imageCallback,
@@ -23,7 +25,11 @@ Reconstructor::Reconstructor(ros::NodeHandle nh,
 
   point_cloud_pub_ = nhp_.advertise<PointCloud>("points2", 1);
 
-  detector_  = new Detector(nh_, nhp_);
+  if (uwsim_) {
+    uwsim_detector_  = new UWSimDetector(nh_, nhp_);
+  } else {
+    detector_  = new Detector(nh_, nhp_);
+  }
   triangulator_ = new Triangulator(nh_, nhp_);
   calibrator_ = new Calibrator(nh_, nhp_);
   calibration_service_ = nhp_.advertiseService("calibrate", &Reconstructor::calibrate, this);
@@ -63,7 +69,11 @@ void Reconstructor::imageCallback(
   if (calibration_) {
     // Detect points in image
     std::vector<cv::Point2d> points2;
-    points2 = detector_->detect(cv_image_ptr->image);
+    if (uwsim_) {
+      points2 = uwsim_detector_->detect(cv_image_ptr->image);
+    } else {
+      points2 = detector_->detect(cv_image_ptr->image);
+    }
     // Set the camera info
     calibrator_->setCameraInfo(info_msg);
     if (calibrator_->detectChessboard(cv_image_ptr->image, points2)) {
@@ -74,7 +84,11 @@ void Reconstructor::imageCallback(
   if (point_cloud_pub_.getNumSubscribers() > 0 && !calibration_) {
     // Detect points in image
     std::vector<cv::Point2d> points2;
-    points2 = detector_->detect(cv_image_ptr->image);
+    if (uwsim_) {
+      points2 = uwsim_detector_->detect(cv_image_ptr->image);
+    } else {
+      points2 = detector_->detect(cv_image_ptr->image);
+    }
 
     // Triangulate points in space
     std::vector<cv::Point3d> points3;

@@ -33,19 +33,25 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_executable(reconstruction src/node.cpp
-                              src/triangulator.cpp
-                              src/detector.cpp
-                              src/calibrator.cpp
-                              src/reconstructor.cpp)
+add_executable(laser_reconstruction src/node.cpp
+                                    src/triangulator.cpp
+                                    src/detector.cpp
+                                    src/uwsim_detector.cpp
+                                    src/calibrator.cpp
+                                    src/reconstructor.cpp)
 
-target_link_libraries(reconstruction
+add_executable(mover src/mover.cpp)
+target_link_libraries(mover
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(laser_reconstruction
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
-install(TARGETS reconstruction
+install(TARGETS laser_reconstruction
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -58,7 +64,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 
 install(FILES
-  launch/laser_line_reconstruction.launch
+  launch/uwsim_laser.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
