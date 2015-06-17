@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   sensor_msgs
   tf
+  tf_conversions
+  pcl_conversions
   std_srvs
 )
 
@@ -43,6 +45,12 @@ add_executable(laser_reconstruction src/node.cpp
 add_executable(mover src/mover.cpp)
 target_link_libraries(mover
   ${catkin_LIBRARIES}
+)
+
+add_executable(laser_registration src/registration.cpp)
+target_link_libraries(laser_registration
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 
 target_link_libraries(laser_reconstruction
