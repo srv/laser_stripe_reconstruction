@@ -1,0 +1,7 @@
+%YAML:1.0
+calibration_date: "Mon Apr 27 15:52:34 2015\n"
+laser_plane: !!opencv-matrix
+   rows: 1
+   cols: 4
+   dt: d
+   data: [ 0, 1, 0, -0.2892 ]
