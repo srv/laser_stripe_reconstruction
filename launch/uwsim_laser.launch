@@ -1,0 +1,19 @@
+<launch>
+  <node name="uwsim"
+        pkg="uwsim"
+        type="uwsim"
+        args="--configfile $(find uwsim)/data/scenes/ocean_laser_sheet.xml"
+        output="screen"
+        launch-prefix="optirun"/>
+  <include file="$(find turbot_configurations)/launch/modules/stereo_image_proc.launch" >
+    <arg name="stereo" value="stereo_down" />
+  </include>
+
+  <node name="laser_reconstruction" pkg="laser_line_reconstruction" type="laser_reconstruction" output="screen">
+    <remap from="image" to="/stereo_down/left/image_rect_color"/>
+    <param name="laser_calibration" value="$(find laser_line_reconstruction)/calibrations/calibration.yaml"/>
+    <param name="show_debug_images" value="false"/>
+    <param name="uwsim_detector" value="true"/>
+    <param name="threshold_value" value="100"/>
+  </node>
+</launch>
