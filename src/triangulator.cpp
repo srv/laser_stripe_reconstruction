@@ -27,7 +27,9 @@ Triangulator::Triangulator(ros::NodeHandle nh,
 
   ROS_INFO_STREAM("[Triangulator]: Parameters \n" <<
   "\t\t* Calibration filename:     " << calibration_filename << "\n" <<
-  "\t\t* Laser planes:             " << laser_plane_.rows << " found\n");
+  "\t\t* Laser planes:             " << laser_plane_.rows << "\n" <<
+  "\t\t* Camera frame id:          " << camera_frame_id_  << "\n" <<
+  "\t\t* Laser frame id:           " << laser_frame_id_);
 }
 
 void Triangulator::setCameraInfo(const sensor_msgs::CameraInfoConstPtr& info_msg) {

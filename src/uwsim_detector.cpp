@@ -13,7 +13,7 @@ UWSimDetector::UWSimDetector(ros::NodeHandle nh,
                  : nh_(nh), nhp_(nhp) {
 
   // detection parameters
-  nhp_.param("peak_window_size", peak_window_size_, 5);
+  nhp_.param("peak_window_size", peak_window_size_, 15);
   nhp_.param("max_laser_width", max_laser_width_, 40);
   nhp_.param("threshold_value", threshold_value_, 40);
 
@@ -54,16 +54,29 @@ vector<Point2d> UWSimDetector::detect(const Mat& img) {
     for (size_t y = 0; y < g.rows; y++) {
       unsigned char c = th_g.at<unsigned char>(y,x);
       if (c > 0) {
+        // Find when c == 0 again
+        size_t i;
+        for (i = 0; i < g.rows; i++) {
+          if (th_g.at<unsigned char>(y+i,x) == 0)
+            break;
+        }
+        // Get the approx centre
+        double approx_centre = static_cast<double>(y) + i/2.0;
+        unsigned int ac = static_cast<unsigned int>(approx_centre);
+
+        // Use the approx centre to perform a weighted mean
         double m = 0;
         double mx = 0;
-        for (int s = -peak_window_size_/2; s < (peak_window_size_+1)/2; s++) {
-          const unsigned char val = g.at<unsigned char>(y + s, x);
+        for (int s = -(peak_window_size_ - 1) / 2; s < (peak_window_size_ + 1) / 2; s++) {
+          const unsigned char val = g.at<unsigned char>(ac + s, x);
           mx = val*s;
           m += val;
         }
         points2.push_back(cv::Point2d(x, y + mx/m));
         if (show_debug_images_)
-          cv::circle(show_img, cv::Point(x, y + mx/m), 5, cv::Scalar(0, 0, 255), 2);
+          cv::circle(show_img, cv::Point(x, y + mx/m), 5, cv::Scalar(0, 0, 255), 1);
+
+        // Just 1 line per col. Get out of this for loop
         break;
       }
     }

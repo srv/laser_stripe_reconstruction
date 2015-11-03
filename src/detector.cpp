@@ -103,9 +103,7 @@ vector<Point2d> Detector::detect(const Mat& img) {
       }
     }
   }
-  ROS_INFO_STREAM("KK");
   if (show_debug_images_) {
-    ROS_INFO_STREAM("KK2");
     cv::namedWindow("Laser", 0);
     cv::imshow("Laser", show_img);
     cv::waitKey(3);

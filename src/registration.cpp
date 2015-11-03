@@ -21,9 +21,10 @@ using namespace std;
 using namespace pcl;
 
 typedef PointCloud<PointXYZRGB> CloudRGB;
+typedef PointCloud<PointXYZ> Cloud;
 
 string parent, child;
-CloudRGB::Ptr acc;
+Cloud::Ptr acc;
 bool init = false;
 ros::Publisher pub;
 
@@ -45,7 +46,7 @@ void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   // Convert incoming message to PCL
   PCLPointCloud2 cloud_pc2;
   pcl_conversions::toPCL(*cloud_msg, cloud_pc2);
-  CloudRGB::Ptr in_cloud(new CloudRGB);
+  Cloud::Ptr in_cloud(new Cloud);
   fromPCLPointCloud2(cloud_pc2,*in_cloud);
 
   // Apply the transform
@@ -74,7 +75,7 @@ int main(int argc, char** argv) {
   nhp.param("child", child, string());
 
   // Setup ROS Publishers and subscriber
-  pub = nhp.advertise<CloudRGB>("/output", 1);
+  pub = nhp.advertise<Cloud>("/output", 1);
   ros::Subscriber sub = nhp.subscribe("/input", 1, callback);
 
   ros::spin();

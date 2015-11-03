@@ -6,6 +6,7 @@
 #include <laser_line_reconstruction/reconstructor.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 /**
  * @brief Reconstructor constructor
@@ -17,6 +18,7 @@ Reconstructor::Reconstructor(ros::NodeHandle nh,
                              ros::NodeHandle nhp)
                            : nh_(nh), nhp_(nhp), it_(nh) {
   nhp_.param("uwsim_detector", uwsim_, false);
+  nhp_.param("camera_frame_id", camera_frame_id_, std::string("/camera"));
 
   camera_sub_ = it_.subscribeCamera("image",
                                     1,  // queue size
@@ -47,7 +49,7 @@ void Reconstructor::imageCallback(
     const sensor_msgs::CameraInfoConstPtr &info_msg) {
   // sanity check
   ros::Time stamp  = info_msg->header.stamp;
-  camera_frame_id_ = info_msg->header.frame_id;
+  //camera_frame_id_ = info_msg->header.frame_id;
 
   if (stamp == ros::Time(0)) {
     ROS_INFO_THROTTLE(10.0,
@@ -96,7 +98,7 @@ void Reconstructor::imageCallback(
     points3 = triangulator_->triangulate(points2);
 
     if (points3.empty()) {
-      ROS_WARN("Empty pointcloud");
+      // nothing
     } else {
       publishPoints(points3, stamp);
     }
@@ -113,8 +115,9 @@ void Reconstructor::publishPoints(
     const std::vector<cv::Point3d>& points,
     const ros::Time& stamp) {
   PointCloud::Ptr point_cloud(new PointCloud());
+
+  pcl_conversions::toPCL(stamp, point_cloud->header.stamp);
   point_cloud->header.frame_id = camera_frame_id_;
-  point_cloud->header.stamp    = stamp.toNSec();
   point_cloud->width           = points.size();
   point_cloud->height          = 1;
   point_cloud->points.resize(points.size());
