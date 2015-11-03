@@ -1,19 +1,29 @@
 <launch>
-  <node name="uwsim"
+  <!-- <node name="uwsim"
         pkg="uwsim"
         type="uwsim"
-        args="--configfile $(find uwsim)/data/scenes/ocean_laser_sheet.xml"
-        output="screen"
-        launch-prefix="optirun"/>
+        args="- -configfile $(find uwsim)/data/scenes/ocean_laser_sheet.xml"
+        output="screen"/>
   <include file="$(find turbot_configurations)/launch/modules/stereo_image_proc.launch" >
     <arg name="stereo" value="stereo_down" />
-  </include>
+  </include> -->
 
   <node name="laser_reconstruction" pkg="laser_line_reconstruction" type="laser_reconstruction" output="screen">
     <remap from="image" to="/stereo_down/left/image_rect_color"/>
     <param name="laser_calibration" value="$(find laser_line_reconstruction)/calibrations/calibration.yaml"/>
-    <param name="show_debug_images" value="false"/>
+    <param name="show_debug_images" value="true"/>
+    <param name="camera_frame_id" value="stereo_down_optical"/>
     <param name="uwsim_detector" value="true"/>
     <param name="threshold_value" value="100"/>
+  </node>
+
+  <node name="laser_registration" pkg="laser_line_reconstruction" type="laser_registration" output="screen">
+    <param name="parent" value="world"/>
+    <param name="child" value="stereo_down_optical"/>
+    <remap from="input" to="/laser_reconstruction/points2"/>
+  </node>
+
+  <node name="viewer" pkg="pointcloud_tools" type="pointcloud_viewer" output="screen">
+    <remap from="input" to="/laser_registration/output"/>
   </node>
 </launch>
