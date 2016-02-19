@@ -24,14 +24,14 @@ typedef PointCloud<PointXYZRGB> CloudRGB;
 typedef PointCloud<PointXYZ> Cloud;
 
 string parent, child;
-Cloud::Ptr acc;
+Cloud::Ptr acc(new Cloud);
 bool init = false;
 ros::Publisher pub;
+tf::TransformListener listener;
 
 void callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
 {
   // Get the transform
-  tf::TransformListener listener;
   tf::StampedTransform transform;
   try
   {

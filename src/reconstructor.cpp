@@ -21,7 +21,7 @@ Reconstructor::Reconstructor(ros::NodeHandle nh,
   nhp_.param("camera_frame_id", camera_frame_id_, std::string("/camera"));
 
   camera_sub_ = it_.subscribeCamera("image",
-                                    1,  // queue size
+                                    5,  // queue size
                                     &Reconstructor::imageCallback,
                                     this);  // transport
 
@@ -50,6 +50,8 @@ void Reconstructor::imageCallback(
   // sanity check
   ros::Time stamp  = info_msg->header.stamp;
   //camera_frame_id_ = info_msg->header.frame_id;
+
+  ROS_INFO_ONCE("Images are received...");
 
   if (stamp == ros::Time(0)) {
     ROS_INFO_THROTTLE(10.0,
@@ -92,6 +94,7 @@ void Reconstructor::imageCallback(
       points2 = detector_->detect(cv_image_ptr->image);
     }
 
+
     // Triangulate points in space
     std::vector<cv::Point3d> points3;
     triangulator_->setCameraInfo(info_msg);
@@ -116,8 +119,11 @@ void Reconstructor::publishPoints(
     const ros::Time& stamp) {
   PointCloud::Ptr point_cloud(new PointCloud());
 
-  pcl_conversions::toPCL(stamp, point_cloud->header.stamp);
-  point_cloud->header.frame_id = camera_frame_id_;
+  std_msgs::Header header;
+  header.stamp = stamp;
+  header.frame_id = camera_frame_id_;
+  pcl_conversions::toPCL(header, point_cloud->header);
+  // point_cloud->header.frame_id = camera_frame_id_;
   point_cloud->width           = points.size();
   point_cloud->height          = 1;
   point_cloud->points.resize(points.size());
