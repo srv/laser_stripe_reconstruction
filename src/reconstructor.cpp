@@ -3,7 +3,7 @@
 /// University of the Balearic Islands
 /// All rights reserved.
 
-#include <laser_line_reconstruction/reconstructor.h>
+#include <laser_stripe_reconstruction/reconstructor.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <pcl_conversions/pcl_conversions.h>

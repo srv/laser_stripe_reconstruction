@@ -3,7 +3,7 @@
 /// University of the Balearic Islands
 /// All rights reserved.
 
-#include <laser_line_reconstruction/triangulator.h>
+#include <laser_stripe_reconstruction/triangulator.h>
 #include <vector>
 
 using namespace cv;

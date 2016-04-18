@@ -6,10 +6,10 @@
 #ifndef RECONSTRUCTOR_H
 #define RECONSTRUCTOR_H
 
-#include <laser_line_reconstruction/uwsim_detector.h>
-#include <laser_line_reconstruction/detector.h>
-#include <laser_line_reconstruction/triangulator.h>
-#include <laser_line_reconstruction/calibrator.h>
+#include <laser_stripe_reconstruction/uwsim_detector.h>
+#include <laser_stripe_reconstruction/detector.h>
+#include <laser_stripe_reconstruction/triangulator.h>
+#include <laser_stripe_reconstruction/calibrator.h>
 
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>

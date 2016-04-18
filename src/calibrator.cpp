@@ -3,7 +3,7 @@
 /// University of the Balearic Islands
 /// All rights reserved.
 
-#include <laser_line_reconstruction/calibrator.h>
+#include <laser_stripe_reconstruction/calibrator.h>
 #include <ros/ros.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <vector>

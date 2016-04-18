@@ -3,10 +3,10 @@
 /// University of the Balearic Islands
 /// All rights reserved.
 
-#include <laser_line_reconstruction/reconstructor.h>
+#include <laser_stripe_reconstruction/reconstructor.h>
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "laser_line_reconstruction_node");
+  ros::init(argc, argv, "laser_stripe_reconstruction_node");
   ros::NodeHandle nh;
   ros::NodeHandle nhp("~");
   Reconstructor reconstructor(nh, nhp);

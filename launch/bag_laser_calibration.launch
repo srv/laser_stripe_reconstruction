@@ -10,7 +10,7 @@
 
   <node name="player" pkg="rosbag" type="play" args="--clock $(arg bagfile)"/>
 
-  <node name="reconstruction" pkg="laser_line_reconstruction" type="reconstruction" output="screen">
+  <node name="reconstruction" pkg="laser_stripe_reconstruction" type="reconstruction" output="screen">
     <remap from="image" to="/camera/image_rect_color"/>
     <param name="calibrate" value="$(arg calibrate)"/>
   </node>

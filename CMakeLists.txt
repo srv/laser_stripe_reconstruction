@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(laser_line_reconstruction)
+project(laser_stripe_reconstruction)
 
 find_package(catkin REQUIRED COMPONENTS
   camera_calibration_parsers
@@ -24,7 +24,7 @@ find_package(PCL REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES laser_line_reconstruction
+#  LIBRARIES laser_stripe_reconstruction
   CATKIN_DEPENDS camera_calibration_parsers std_srvs cv_bridge geometry_msgs image_geometry image_transport pcl_ros roscpp rospy sensor_msgs tf
   DEPENDS OpenCV PCL
 )
@@ -36,7 +36,7 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_executable(laser_reconstruction src/node.cpp
+add_executable(laser_stripe_reconstruction src/node.cpp
                                     src/triangulator.cpp
                                     src/detector.cpp
                                     src/uwsim_detector.cpp
@@ -48,19 +48,19 @@ target_link_libraries(mover
   ${catkin_LIBRARIES}
 )
 
-add_executable(laser_registration src/registration.cpp)
-target_link_libraries(laser_registration
+add_executable(laser_stripe_registration src/registration.cpp)
+target_link_libraries(laser_stripe_registration
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
-target_link_libraries(laser_reconstruction
+target_link_libraries(laser_stripe_reconstruction
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${PCL_LIBRARIES}
 )
 
-install(TARGETS laser_reconstruction
+install(TARGETS laser_stripe_reconstruction
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

@@ -3,7 +3,7 @@
 /// University of the Balearic Islands
 /// All rights reserved.
 
-#include <laser_line_reconstruction/uwsim_detector.h>
+#include <laser_stripe_reconstruction/uwsim_detector.h>
 
 using namespace cv;
 using namespace std;

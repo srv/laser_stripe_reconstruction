@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>laser_line_reconstruction</name>
+  <name>laser_stripe_reconstruction</name>
   <version>0.0.0</version>
-  <description>The laser_line_reconstruction package</description>
+  <description>The laser_stripe_reconstruction package</description>
 
   <maintainer email="miquel.massot@uib.cat">Miquel Massot</maintainer>
 
