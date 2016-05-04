@@ -114,6 +114,12 @@ void Calibrator::fitPlane() {
   cv::Mat points_centered;
   points_centered = points - cv::Mat::ones(num_points, 1, CV_64FC1)*centroid;
 
+  if (std::isnan(centroid.at<double>(0,0)) ||
+      std::isnan(centroid.at<double>(0,1)) ||
+      std::isnan(centroid.at<double>(0,2))) {
+    return;
+  }
+
   // Singular Value Decomposition
   ROS_INFO_STREAM("Running SVD...");
   cv::SVD svd;
@@ -291,5 +297,6 @@ cv::Point3d Calibrator::intersectRay(const cv::Point2d& p,
   q.x = (p.x-cm_.cx())/cm_.fx()*t;
   q.y = (p.y-cm_.cy())/cm_.fy()*t;
   q.z = t;
+  // std::cout << "IP (" << q.x << ", " << q.y << ", " << q.z << ")  " << std::endl;
   return q;
 }
