@@ -43,7 +43,11 @@ bool Calibrator::detectChessboard(const cv::Mat& img,
     cv::Mat mask = removeChessboard(img);
     std::vector<cv::Point2d> filt_points2d;
     filt_points2d = extractPoints(points2d, mask);
-    savePoints(plane, filt_points2d);
+    if (filt_points2d.size() > 0) {
+      savePoints(plane, filt_points2d);
+    } else {
+      ROS_INFO_STREAM("Points not well detected..."); 
+    }
   }
   cv::namedWindow("Laser Calibration", 0);
   cv::imshow("Laser Calibration", show_img_);
@@ -55,7 +59,7 @@ std::vector<cv::Point2d> Calibrator::extractPoints(
     const std::vector<cv::Point2d> points, const cv::Mat& mask) {
   std::vector<cv::Point2d> filt_points;
   for (size_t k = 0; k < points.size(); k++) {
-    const unsigned char val = mask.at<unsigned char>(points[k].y, points[k].x);
+    int val = static_cast<int>(mask.at<unsigned char>(points[k].y, points[k].x));
     if (val>0) {
       filt_points.push_back(points[k]);
       // Draw point circles in the image
@@ -297,6 +301,6 @@ cv::Point3d Calibrator::intersectRay(const cv::Point2d& p,
   q.x = (p.x-cm_.cx())/cm_.fx()*t;
   q.y = (p.y-cm_.cy())/cm_.fy()*t;
   q.z = t;
-  // std::cout << "IP (" << q.x << ", " << q.y << ", " << q.z << ")  " << std::endl;
+  //std::cout << "IP (" << q.x << ", " << q.y << ", " << q.z << ")  " << std::endl;
   return q;
 }
