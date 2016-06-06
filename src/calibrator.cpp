@@ -46,7 +46,7 @@ bool Calibrator::detectChessboard(const cv::Mat& img,
     if (filt_points2d.size() > 0) {
       savePoints(plane, filt_points2d);
     } else {
-      ROS_INFO_STREAM("Points not well detected..."); 
+      ROS_INFO_STREAM("Points not well detected...");
     }
   }
   cv::namedWindow("Laser Calibration", 0);
@@ -212,8 +212,8 @@ bool Calibrator::detectChessboardImpl(const cv::Mat& img,
                                             rvec, tvec, K_prime, cv::Mat());
     low_reprojection_error = (error < max_reproj_error_);
     if (success && !low_reprojection_error) {
-      ROS_WARN_STREAM("Reprojection error too high. " <<
-                      "Max set at " << max_reproj_error_);
+      ROS_WARN_STREAM("Reprojection error too high (" << error <<
+                      "px). Max set at " << max_reproj_error_);
     } else if (success && low_reprojection_error) {
       // Get 3D plane
       cv::Mat rot(3, 3, CV_64FC1);
