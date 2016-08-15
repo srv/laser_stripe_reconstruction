@@ -6,7 +6,7 @@ from cv2 import cv
 fig = pyplot.figure()
 ax = Axes3D(fig)
 
-filepath = "/home/miquel/.ros/calibration.yaml"
+filepath = "/home/sparus/.ros/calibration.yaml"
 P = np.array(cv.Load(filepath, cv.CreateMemStorage(),"laser_plane"))
 points = np.array(cv.Load(filepath, cv.CreateMemStorage(),"points"))
 
