@@ -13,8 +13,9 @@ Detector::Detector(ros::NodeHandle nh,
                  : nh_(nh), nhp_(nhp) {
 
   // detection parameters
-  nhp_.param("peak_window_size", peak_window_size_, 5);
-  nhp_.param("max_laser_width", max_laser_width_, 40);
+  nhp_.param("integral_window_size", integral_window_size_, 5);
+  nhp_.param("blue", blue_, false);
+  nhp_.param("min_integrated_value", min_integrated_value_, 40);
   nhp_.param("roi_x", roi_x_, 0);
   nhp_.param("roi_y", roi_y_, 0);
   nhp_.param("roi_width", roi_width_, 0);
@@ -24,8 +25,8 @@ Detector::Detector(ros::NodeHandle nh,
   nhp_.param("show_debug_images", show_debug_images_, false);
 
   ROS_INFO_STREAM("[Detector]: Parameters \n" <<
-  "\t\t* peak_window_size:      " << peak_window_size_ << "\n" <<
-  "\t\t* max_laser_width:       " << max_laser_width_ << "\n" <<
+  "\t\t* integral_window_size:  " << integral_window_size_ << "\n" <<
+  "\t\t* min_integrated_value:  " << min_integrated_value_ << "\n" <<
   "\t\t* show_debug_images:     " << show_debug_images_ << "\n" <<
   "\t\t* roi_x:                 " << roi_x_ << "\n" <<
   "\t\t* roi_y:                 " << roi_y_ << "\n" <<
@@ -55,96 +56,74 @@ vector<Point2d> Detector::detect(const Mat& img) {
   // Split the image in channels
   vector<Mat> channels(3);
   split(img, channels);
-  Mat g(img.size(), CV_8UC1);
-  Mat green = channels[1];
+  Mat green(img.size(), CV_8UC1);
+  if (blue_)  green = channels[2];
+  if (!blue_) green = channels[1];
 
   double min, max;
   cv::Point min_idx, max_idx;
 
   // Substract red channel to green channel
-  g = channels[1];  // - channels[2];
+  // green = channels[1];  // - channels[2];
 
-  Mat g_roi = g(cv::Rect(roi_x_, roi_y_, roi_width_, roi_height_));
-  Mat g_roi_tp;
-  cv::transpose(g_roi, g_roi_tp);
-
-  cv::Mat g_double;
-  g_roi_tp.convertTo(g_double, CV_32F);
-  cv::minMaxLoc(g_roi_tp, &min, &max, &min_idx, &max_idx);
-  g_double = g_double * 1.0/(max - min) - min * 1.0/(max - min);
-
-  Mat d_double;
-  Scharr(g_double, d_double, g_double.depth(),
-         1,   // order of X derivative
-         0);  // order of Y derivative
-
-  Sobel(g_double, d_double, g_double.depth(), 1, 0, 5);
-  cv::minMaxLoc(d_double, &min, &max, &min_idx, &max_idx);
-  d_double = d_double * 1.0/(max - min) - min * 1.0/(max - min);
+  Mat green_roi = green(cv::Rect(roi_x_, roi_y_, roi_width_, roi_height_));
 
   // Show ROI
   if (show_debug_images_) {
-    cv::rectangle(show_img,
-                  cv::Point(roi_x_, roi_y_),
-                  cv::Point(roi_x_ + roi_width_, roi_y_ + roi_height_),
-                  cv::Scalar(255, 255, 255));
-    cv::putText(show_img,
-                std::string("ROI"),
-                cv::Point(roi_x_, roi_y_ - 5),
-                cv::FONT_HERSHEY_DUPLEX,
-                2,  // font scale
-                cv::Scalar(255, 255, 255), 2);
+    if (roi_y_ > 0 && roi_width_ > 0 && roi_height_ > 0) {
+      cv::rectangle(show_img,
+                    cv::Point(roi_x_, roi_y_),
+                    cv::Point(roi_x_ + roi_width_, roi_y_ + roi_height_),
+                    cv::Scalar(255, 255, 255));
+      cv::putText(show_img,
+                  std::string("ROI"),
+                  cv::Point(roi_x_, roi_y_ - 5),
+                  cv::FONT_HERSHEY_DUPLEX,
+                  2,  // font scale
+                  cv::Scalar(255, 255, 255), 2);
+    }
   }
 
-  // Get max value per column
-  for (size_t i = 0; i < d_double.rows; i++) {
-    // Derivate column
-    const float* Mi = d_double.ptr<float>(i);
-    std::vector<float> row_i(Mi, Mi + d_double.cols);
+  // Declare required vars
+  double max_integrated_value, actual_integrated_value;
+  double greenness_acc, greenness_distance_acc, weight;
+  double max_integrated_value_idx;
+  double iws = static_cast<double>(integral_window_size_);
 
-    // Get max and min per column
-    cv::minMaxLoc(row_i, &min, &max, &min_idx, &max_idx);
-    int distance = (min_idx.x - max_idx.x);
-    // Check distance between min and max
-    if (distance > 0 && distance < max_laser_width_) {
-      // std::cout << "IDX = " << i
-      //           << " Min is " << min
-      //           << " at (" << min_idx.x
-      //           << ", " << min_idx.y
-      //           << ") Max is " << max
-      //           << " at (" << max_idx.x
-      //           << ", " << max_idx.y << ") "
-      //           << "D = " << distance << std::endl;
-      // Use centre of mass
-      int j = (max_idx.x + min_idx.x)/2;
-      double peak_j = static_cast<double>(j);
-      double m = 0;
-      double mx = 0;
-      for (int s = -peak_window_size_/2; s < (peak_window_size_+1)/2; s++) {
-        cv::Point2d p(i + roi_x_, j + s + roi_y_);
-        const unsigned char val = green.at<unsigned char>(p);
-        //cv::circle(show_img, p, 5, cv::Scalar(255, 0, 0), 2);
-        mx = val*s;
-        m += val;
+  for (int u = 0; u < green_roi.size().width;  u++) {
+    max_integrated_value = 0;
+    for (int vw = 0; vw < green_roi.rows - integral_window_size_; vw++) {
+      actual_integrated_value = 0;
+      greenness_acc = 0;
+      greenness_distance_acc = 0;
+      // Weighted integral for calculating the likelihood that the following
+      // points are part of the laser line
+      for (int v = vw; v < vw + integral_window_size_; v++) {
+        weight = 1.0 - 2.0 * abs(vw + (iws - 1.0) / 2.0 - v) / iws;
+        const int greenness = green_roi.at<unsigned char>(v, u);
+        actual_integrated_value += weight*static_cast<double>(greenness);
+        greenness_acc += greenness;
+        greenness_distance_acc += (v-vw)*greenness;
       }
-      // Check everything is correct!
-      if (m == 0) {
-        // ROS_INFO_STREAM("Peak not processed");
-        continue;
+      if (actual_integrated_value > max_integrated_value) {
+        // max_integrated_value:  highest integrated green value
+        max_integrated_value = actual_integrated_value;
+        // max_integrated_value_idx: row where max_integrated_value occurs
+        max_integrated_value_idx = vw + (greenness_distance_acc/greenness_acc);
       }
-      mx /= m;
-      peak_j += mx;
-      // If there's is green content in the pixel
-      cv::Point2d p(i + roi_x_, peak_j + roi_y_);
-      cv::Vec3b val = img.at<cv::Vec3b>(p);
-      if (val[1] >= val[0] && val[1] >= val[2] && val[1] >= 100) {
-        points2.push_back(p);
-        if (show_debug_images_) {
-          cv::circle(show_img, p, 1, cv::Scalar(0, 0, 255), 1);
-        }
+    }
+    // If 'true', there is a point in the current column,
+    // which presumably belongs to the laser line
+    if (max_integrated_value > min_integrated_value_*integral_window_size_/2) {
+      // Create the point and add to Map Points
+      cv::Point2d p2(u + roi_x_, max_integrated_value_idx + roi_y_);
+      points2.push_back(p2);
+      if (show_debug_images_) {
+        cv::circle(show_img, p2, 1, cv::Scalar(0, 0, 255), 1);
       }
     }
   }
+
   if (show_debug_images_) {
     cv::namedWindow("Laser", 0);
     cv::imshow("Laser", show_img);

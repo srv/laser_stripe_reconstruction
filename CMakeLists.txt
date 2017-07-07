@@ -36,6 +36,13 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
+
+add_executable(test_detector src/test_detector.cpp)
+target_link_libraries(test_detector
+  ${OpenCV_LIBRARIES}
+  ${catkin_LIBRARIES}
+)
+
 add_executable(laser_stripe_reconstruction src/node.cpp
                                     src/triangulator.cpp
                                     src/detector.cpp
@@ -60,7 +67,7 @@ target_link_libraries(laser_stripe_reconstruction
   ${PCL_LIBRARIES}
 )
 
-install(TARGETS laser_stripe_reconstruction
+install(TARGETS laser_stripe_reconstruction laser_stripe_registration
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

@@ -85,8 +85,9 @@ void Reconstructor::imageCallback(
     }
   }
 
-  if (point_cloud_pub_.getNumSubscribers() > 0 && !calibration_) {
+  if (!calibration_) {
     // Detect points in image
+    ROS_INFO("Detect");
     std::vector<cv::Point2d> points2;
     if (uwsim_) {
       points2 = uwsim_detector_->detect(cv_image_ptr->image);
@@ -94,12 +95,13 @@ void Reconstructor::imageCallback(
       points2 = detector_->detect(cv_image_ptr->image);
     }
 
-
+    ROS_INFO("Triangulate");
     // Triangulate points in space
     std::vector<cv::Point3d> points3;
     triangulator_->setCameraInfo(info_msg);
     points3 = triangulator_->triangulate(points2);
 
+    ROS_INFO_STREAM("Publish " << points3.size() << " points");
     if (points3.empty()) {
       // nothing
     } else {

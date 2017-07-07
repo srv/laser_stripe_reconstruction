@@ -1,21 +1,27 @@
 <launch>
 
   <param name="use_sim_time" value="true"/>
-  <arg name="bagfile" default="/home/miquel/bagfiles/sweep5-2015-04-28-11-16-46.bag"/>
+  <arg name="bagfile" default="/home/miquel/bagfiles/laser/2017-03-08-12-21-41.bag"/>
   <arg name="calibrate" default="false"/>
 
-  <!-- <node pkg="tf" type="static_transform_publisher" name="rviz2cam" args="0 0 0.2 3.1416 0 0 /arm_tool /left_optical 10"/> -->
-  <node pkg="tf" type="static_transform_publisher" name="rviz2cam" args="0.5 0 0.3 -1.57 0 3.1415 /arm_tool2 /left_optical 10"/>
-
-  <node ns="camera" name="image_proc" pkg="image_proc" type="image_proc"/>
-
-  <node name="player" pkg="rosbag" type="play" args="--clock -r 0.5 $(arg bagfile)" output="screen"/>
-  <node name="mover" pkg="laser_stripe_reconstruction" type="mover">
-    <param name="speed" value="0.35"/>
-  </node>
-  <node name="reconstruction" pkg="laser_stripe_reconstruction" type="reconstruction" output="screen">
-    <remap from="image" to="/camera/image_rect_color"/>
+  <node ns="/stereo_down/left" name="image_proc" pkg="image_proc" type="image_proc"/>
+  <node name="player" pkg="rosbag" type="play" args="--clock -r 0.1 $(arg bagfile)" output="screen"/>
+  <node name="reconstruction" pkg="laser_stripe_reconstruction" type="laser_stripe_reconstruction" output="screen">
+    <remap from="image" to="/stereo_down/left/image_rect_color"/>
+    <param name="camera_frame_id" value="left_optical"/>
     <param name="calibrate" value="$(arg calibrate)"/>
     <param name="show_debug_images" value="true"/>
+    <param name="blue" value="true"/>
+
+    <param name="roi_x" value="0"/>
+    <param name="roi_y" value="350"/>
+    <param name="roi_width" value="960"/>
+    <param name="roi_height" value="200"/>
+
+    <param name="integral_window_size" value="10"/>
+    <param name="min_integrated_value" value="80"/>
+
+    <param name="laser_calibration" value="/home/miquel/bagfiles/laser/calibration.yaml"/>
+
   </node>
 </launch>
