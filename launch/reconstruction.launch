@@ -1,0 +1,32 @@
+<launch>
+
+  <arg name="calibrate" default="false"/>
+
+  <node name="reconstruction" pkg="laser_stripe_reconstruction" type="laser_stripe_reconstruction" output="screen">
+    <remap from="image" to="/stereo_down/left/image_rect_color"/>
+    <param name="camera_frame_id" value="/stereo_down/left_optical"/>
+    <param name="calibrate" value="$(arg calibrate)"/>
+    <param name="show_debug_images" value="true"/>
+    <param name="blue" value="true"/>
+
+    <param name="roi_x" value="0"/>
+    <param name="roi_y" value="350"/>
+    <param name="roi_width" value="960"/>
+    <param name="roi_height" value="200"/>
+
+    <param name="integral_window_size" value="10"/>
+    <param name="min_integrated_value" value="10"/>
+
+    <param name="laser_calibration" value="$(find laser_stripe_reconstruction)/calibrations/turbot_calibration.yaml"/>
+
+  </node>
+
+  <!-- VEHICLE FRAMES -->
+  <rosparam command="load" file="$(find turbot)/config/frames.yaml"/>
+
+  <!-- VEHICLE STATIC TFs -->
+  <include file="$(find turbot)/launch/modules/transforms.launch">
+    <arg name="suffix" value="_robot"/>
+  </include>
+
+</launch>
