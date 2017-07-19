@@ -50,6 +50,12 @@ add_executable(laser_stripe_reconstruction src/node.cpp
                                     src/calibrator.cpp
                                     src/reconstructor.cpp)
 
+add_executable(laser_stripe_stereo_calibration src/stereo_calibrator_node.cpp
+                                               src/detector.cpp)
+target_link_libraries(laser_stripe_stereo_calibration
+  ${catkin_LIBRARIES}
+)
+
 add_executable(mover src/mover.cpp)
 target_link_libraries(mover
   ${catkin_LIBRARIES}

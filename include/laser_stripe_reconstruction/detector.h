@@ -25,6 +25,10 @@ class Detector {
   int integral_window_size_;
   int min_integrated_value_;
   bool blue_;
+
+  double integral_distance_value_;
+  int max_allowed_jump_;
+  double max_jump_idx_distance_;
 };
 
 #endif  // DETECTOR_H
